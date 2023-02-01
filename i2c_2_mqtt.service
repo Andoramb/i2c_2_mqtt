@@ -1,0 +1,14 @@
+[Unit]
+Description=System Sensor service
+Wants=network-online.target
+After=network-online.target
+#After=multi-user.target
+
+[Service]
+User=klipper
+Type=idle
+WorkingDirectory=/home/klipper/i2c_2_mqtt/
+ExecStart=/usr/bin/python3 /home/klipper/i2c_2_mqtt/mqtt2i2c.py
+
+[Install]
+WantedBy=multi-user.target
