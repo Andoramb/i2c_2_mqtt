@@ -1,0 +1,19 @@
+mqtt:
+  broker: <your broker IP>
+  port: <default port is: 1883>
+  username: <mqtt username>
+  password: <mqtt password>
+  state_topic: <where to push the state of the relay>
+  command_topic: <where to grab the command of the relay>
+homeassistant:
+  discovery: <"true" if you want autodiscovery for HomeAssistant>
+  discovery_prefix: <by default it should be homeassistant>
+  device_name: <set the name of the relay switch in HomeAssistant>
+
+i2c:
+  device_address: <read it out with 'i2cdetect -y 1', default should be 0x10>
+  register_address:  <nothing to configure here actually, relay1 is 0x01, and so on>
+    1: 0x01
+    2: 0x02
+    3: 0x03
+    4: 0x04
