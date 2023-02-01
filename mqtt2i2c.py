@@ -2,30 +2,32 @@ import yaml
 import json
 import smbus
 import paho.mqtt.client as mqtt
+import sys
 
-# Load configuration from YAML file
-with open("config.yaml", "r") as f:
-    try:
-      config = yaml.safe_load(f)
+if len(sys.argv) < 2:
+    print("Usage: python mqtt2i2c.py <config_file.yaml>")
+    sys.exit(1)
 
-      # MQTT broker configuration
-      MQTT_BROKER = config["mqtt"]["broker"]
-      MQTT_PORT = config["mqtt"]["port"]
-      MQTT_USERNAME = config["mqtt"]["username"]
-      MQTT_PASSWORD = config["mqtt"]["password"]
-      MQTT_STATE_TOPIC = config["mqtt"]["state_topic"]
-      MQTT_COMMAND_TOPIC = config["mqtt"]["command_topic"]
+# Load the configuration from the YAML file
+with open(sys.argv[1], "r") as f:
+    config = yaml.safe_load(f)
 
-      #HomeAsisstant configuration
-      HA_DISCOVERY_ENABLE = config["homeassistant"]["discovery"]
-      HA_DISCOVERY = config["homeassistant"]["discovery_prefix"]
-      HA_DEVICE = config["homeassistant"]["device_name"]
+# MQTT broker configuration
+MQTT_BROKER = config["mqtt"]["broker"]
+MQTT_PORT = config["mqtt"]["port"]
+MQTT_USERNAME = config["mqtt"]["username"]
+MQTT_PASSWORD = config["mqtt"]["password"]
+MQTT_STATE_TOPIC = config["mqtt"]["state_topic"]
+MQTT_COMMAND_TOPIC = config["mqtt"]["command_topic"]
 
-      # I2C configuration
-      I2C_DEVICE_ADDRESS = config["i2c"]["device_address"]
-      I2C_REGISTER_ADDRESS = config["i2c"]["register_address"]
-    except yaml.YAMLError as exc:
-      print(exc)
+#HomeAsisstant configuration
+HA_DISCOVERY_ENABLE = config["homeassistant"]["discovery"]
+HA_DISCOVERY = config["homeassistant"]["discovery_prefix"]
+HA_DEVICE = config["homeassistant"]["device_name"]
+
+# I2C configuration
+I2C_DEVICE_ADDRESS = config["i2c"]["device_address"]
+I2C_REGISTER_ADDRESS = config["i2c"]["register_address"]
 
 
 # Connect to I2C bus

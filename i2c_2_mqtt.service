@@ -8,7 +8,7 @@ After=network-online.target
 User=klipper
 Type=idle
 WorkingDirectory=/home/klipper/i2c_2_mqtt/
-ExecStart=/usr/bin/python3 /home/klipper/i2c_2_mqtt/mqtt2i2c.py
+ExecStart=/usr/bin/python3 /home/klipper/i2c_2_mqtt/mqtt2i2c.py /home/klipper/i2c_2_mqtt/config.yaml
 
 [Install]
 WantedBy=multi-user.target
