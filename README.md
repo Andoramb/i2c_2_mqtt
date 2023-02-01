@@ -6,10 +6,10 @@ Currently it's a basic implementation:
 The script listens on predefined MQTT topics and forwards the commands to the relay on I2C.
 
 Current capabilities:
-  <TBD>
+  TBD>
     
 Steps to get it up and running:
-  <TBD>
+  TBD>
   
 Future directions/improvements:
-  <TBD>
+  TBD>
