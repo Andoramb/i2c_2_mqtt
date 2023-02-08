@@ -33,13 +33,16 @@ I2C_REGISTER_ADDRESS = config["i2c"]["register_address"]
 # Connect to I2C bus
 bus = smbus.SMBus(1)
 
-def on_connect(client, userdata, flags, rc):
-    print("Connected with result code "+str(rc))
-    client.subscribe(MQTT_STATE_TOPIC)
-    client.subscribe(MQTT_COMMAND_TOPIC+"/#")
+def on_connect(client, rc):
+    if rc == 0:
+      client.subscribe(MQTT_STATE_TOPIC)
+      client.subscribe(MQTT_COMMAND_TOPIC+"/#")
+      report_state()
+    else:
+        print("Connection failed with result code: ", rc)
 
     #HomeAssistant: send atodiscovery telemetry for this power switch
-    if HA_DISCOVERY_ENABLE == "true":
+    if HA_DISCOVERY_ENABLE:
         data = {
           "name": HA_DEVICE,
           "state_topic": MQTT_STATE_TOPIC+"/1",
@@ -57,45 +60,36 @@ def on_connect(client, userdata, flags, rc):
 
         client.publish(MQTT_STATE_TOPIC+'/availability', "online")
 
-        for relays in I2C_REGISTER_ADDRESS:
-            current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, I2C_REGISTER_ADDRESS[relays])
-
-            if current_state == 0:
-                current_state = "off"
-            elif current_state == 1:
-               current_state = "on"
-
-            client.publish(MQTT_STATE_TOPIC+'/'+str(relays), current_state)
-
         client.publish(HA_DISCOVERY+'/switch/'+HA_DEVICE+'/config', payload)
         print("Sent HA switch discovery "+str(payload))
 
 # MQTT callback for when a message is received on the subscribed topic
-def on_message(client, userdata, msg):
+def on_message(userdata, msg):
     if userdata["is_updating_state"]:
         return
-
     relay_number = int(msg.topic.split("/")[-1])
 
     onlist  = ["on",  "1", "true",  "ON",  "TRUE",  "True"]
     offlist = ["off", "0", "false", "OFF", "FALSE", "False"]
+
     if msg.payload.decode() in onlist:
         # toggle the relay to on
         bus.write_byte_data(I2C_DEVICE_ADDRESS, I2C_REGISTER_ADDRESS[relay_number], 0x01)
-
     elif msg.payload.decode() in offlist:
         # toggle the relay to off
         bus.write_byte_data(I2C_DEVICE_ADDRESS, I2C_REGISTER_ADDRESS[relay_number], 0x00)
+    report_state(relay_number)
 
-    current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, I2C_REGISTER_ADDRESS[relay_number])
-
-    if current_state == 0:
-      current_state = "off"
-    elif current_state == 1:
-      current_state = "on"
-
-    client.publish(MQTT_STATE_TOPIC+'/'+str(relay_number), current_state)
-
+def report_state(relays=None):
+    if relays is not None and relays > 0:
+        current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, relays)
+        current_state = "off" if current_state == 0 else "on"
+        client.publish("{}/{}".format(MQTT_STATE_TOPIC, str(relays)), current_state)
+    else:
+        for address in I2C_REGISTER_ADDRESS:
+            current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, address)
+            current_state = "off" if current_state == 0 else "on"
+            client.publish("{}/{}".format(MQTT_STATE_TOPIC, str(address)), current_state)
 
 # Connect to MQTT broker
 client = mqtt.Client()
@@ -104,8 +98,6 @@ client.on_connect = on_connect
 
 # Subscribe to the specified topic
 client.user_data_set({"is_updating_state": False})
-#client.message_callback_add(MQTT_COMMAND_TOPIC+"/#", on_message)
-
 
 client.on_message = on_message
 
