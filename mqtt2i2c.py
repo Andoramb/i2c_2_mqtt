@@ -23,48 +23,51 @@ MQTT_COMMAND_TOPIC = config["mqtt"]["command_topic"]
 #HomeAsisstant configuration
 HA_DISCOVERY_ENABLE = config["homeassistant"]["discovery"]
 HA_DISCOVERY = config["homeassistant"]["discovery_prefix"]
-HA_DEVICE = config["homeassistant"]["device_name"]
 
 # I2C configuration
 I2C_DEVICE_ADDRESS = config["i2c"]["device_address"]
 I2C_REGISTER_ADDRESS = config["i2c"]["register_address"]
 
+DEVICE_NAME = config["device_name"]
 
 # Connect to I2C bus
 bus = smbus.SMBus(1)
 
-def on_connect(client, rc):
+STATE_TOPIC = 'I2C/'+DEVICE_NAME+'/'+MQTT_STATE_TOPIC
+COMMAND_TOPIC = 'I2C/'+DEVICE_NAME+'/'+MQTT_COMMAND_TOPIC
+
+def on_connect(client, userdata, flags, rc):
     if rc == 0:
-      client.subscribe(MQTT_STATE_TOPIC)
-      client.subscribe(MQTT_COMMAND_TOPIC+"/#")
+      client.subscribe(STATE_TOPIC)
+      client.subscribe(COMMAND_TOPIC+"/#")
       report_state()
     else:
         print("Connection failed with result code: ", rc)
 
     #HomeAssistant: send atodiscovery telemetry for this power switch
-    if HA_DISCOVERY_ENABLE:
+    if HA_DISCOVERY_ENABLE == "true":
         data = {
-          "name": HA_DEVICE,
-          "state_topic": MQTT_STATE_TOPIC+"/1",
-          "command_topic": MQTT_COMMAND_TOPIC+"/1",
+          "name": DEVICE_NAME,
+          "state_topic": STATE_TOPIC+"/1",
+          "command_topic": COMMAND_TOPIC+"/1",
           "payload_off ": "off",
           "payload_on": "on",
           "icon": "mdi:power",
           "availability": [
             {
-                "topic": MQTT_STATE_TOPIC+"/availability"
+                "topic": STATE_TOPIC+"/availability"
             }
            ],
         }
         payload = json.dumps(data)
 
-        client.publish(MQTT_STATE_TOPIC+'/availability', "online")
+        client.publish(STATE_TOPIC+'/availability', "online")
 
-        client.publish(HA_DISCOVERY+'/switch/'+HA_DEVICE+'/config', payload)
+        client.publish(HA_DISCOVERY+'/switch/'+DEVICE_NAME+'/config', payload)
         print("Sent HA switch discovery "+str(payload))
 
 # MQTT callback for when a message is received on the subscribed topic
-def on_message(userdata, msg):
+def on_message(client, userdata, msg):
     if userdata["is_updating_state"]:
         return
     relay_number = int(msg.topic.split("/")[-1])
@@ -84,12 +87,12 @@ def report_state(relays=None):
     if relays is not None and relays > 0:
         current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, relays)
         current_state = "off" if current_state == 0 else "on"
-        client.publish("{}/{}".format(MQTT_STATE_TOPIC, str(relays)), current_state)
+        client.publish("{}/{}".format(STATE_TOPIC, str(relays)), current_state)
     else:
         for address in I2C_REGISTER_ADDRESS:
             current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, address)
             current_state = "off" if current_state == 0 else "on"
-            client.publish("{}/{}".format(MQTT_STATE_TOPIC, str(address)), current_state)
+            client.publish("{}/{}".format(STATE_TOPIC, str(address)), current_state)
 
 # Connect to MQTT broker
 client = mqtt.Client()
