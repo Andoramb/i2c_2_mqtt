@@ -86,12 +86,12 @@ def on_message(client, userdata, msg):
 def report_state(relays=None):
     if relays is not None and relays > 0:
         current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, relays)
-        current_state = "Off" if current_state == 0 else "On"
+        current_state = "OFF" if current_state == 0 else "ON"
         client.publish("{}/{}".format(STATE_TOPIC, str(relays)), current_state)
     else:
         for address in I2C_REGISTER_ADDRESS:
             current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, address)
-            current_state = "Off" if current_state == 0 else "On"
+            current_state = "OFF" if current_state == 0 else "ON"
             client.publish("{}/{}".format(STATE_TOPIC, str(address)), current_state)
 
 # Connect to MQTT broker
