@@ -70,7 +70,12 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     if userdata["is_updating_state"]:
         return
-    relay_number = int(msg.topic.split("/")[-1])
+
+    # Get the relay number from the topic
+    try:
+        relay_number = int(msg.topic.split("/")[-1])
+    except ValueError as exc:
+        raise ValueError("Invalid relay number") from exc
 
     onlist  = ["on",  "1", "true",  "On",  "ON",  "TRUE",  "True"]
     offlist = ["off", "0", "false", "Off", "OFF", "FALSE", "False"]
@@ -81,18 +86,13 @@ def on_message(client, userdata, msg):
     elif msg.payload.decode() in offlist:
         # toggle the relay to off
         bus.write_byte_data(I2C_DEVICE_ADDRESS, I2C_REGISTER_ADDRESS[relay_number], 0x00)
-    report_state(relay_number)
+    report_state()
 
-def report_state(relays=None):
-    if relays is not None and relays > 0:
-        current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, relays)
+def report_state():
+    for address in I2C_REGISTER_ADDRESS:
+        current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, address)
         current_state = "OFF" if current_state == 0 else "ON"
-        client.publish("{}/{}".format(STATE_TOPIC, str(relays)), current_state)
-    else:
-        for address in I2C_REGISTER_ADDRESS:
-            current_state = bus.read_byte_data(I2C_DEVICE_ADDRESS, address)
-            current_state = "OFF" if current_state == 0 else "ON"
-            client.publish("{}/{}".format(STATE_TOPIC, str(address)), current_state)
+        client.publish("{}/{}".format(STATE_TOPIC, str(address)), current_state, retain=True)
 
 # Connect to MQTT broker
 client = mqtt.Client()

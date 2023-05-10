@@ -1,14 +1,15 @@
 [Unit]
-Description=System Sensor service
+Description=I2C to MQTT service
 Wants=network-online.target
 After=network-online.target
-#After=multi-user.target
 
 [Service]
-User=klipper
 Type=idle
-WorkingDirectory=/home/klipper/i2c_2_mqtt/
-ExecStart=/usr/bin/python3 /home/klipper/i2c_2_mqtt/mqtt2i2c.py /home/klipper/i2c_2_mqtt/config.yaml
+Environment=USER=username
+Environment=WORKING_DIR=/path/to/i2c_2_mqtt/
+ExecStart=/usr/bin/python3 ${WORKING_DIR}mqtt2i2c.py ${WORKING_DIR}config.yaml
+User=${USER}
+WorkingDirectory=${WORKING_DIR}
 
 [Install]
 WantedBy=multi-user.target
