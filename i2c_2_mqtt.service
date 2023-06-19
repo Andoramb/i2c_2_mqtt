@@ -5,9 +5,9 @@ After=network-online.target
 
 [Service]
 Type=idle
-Environment=USER=username
-Environment=WORKING_DIR=/path/to/i2c_2_mqtt/
-ExecStart=/usr/bin/python3 ${WORKING_DIR}mqtt2i2c.py ${WORKING_DIR}config.yaml
+Environment=WORKING_DIR=/home/
+Environment=USER=<username>
+ExecStart=/usr/bin/python3 ${WORKING_DIR}/mqtt2i2c.py ${WORKING_DIR}/config.yaml
 User=${USER}
 WorkingDirectory=${WORKING_DIR}
 
