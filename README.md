@@ -42,8 +42,8 @@ Are you interested? Cool, let's go:
  6. Optional: HomeAsisstant should register the relay based on `device_name` from config.yaml :house_with_garden:
  7. Optional: copy the service template to `/etc/systemd/system` for autostart
     1. Replace `username` and `/path/to/i2c_2_mqtt/` with your data :gear:
-    2. `sudo service systemctl daemon-reload`
-    3. `sudo service systemctl enable i2c_2_mqtt.service`
+    2. `sudo systemctl daemon-reload`
+    3. `sudo systemctl enable i2c_2_mqtt.service`
     4. :thumbsup:
 
 
